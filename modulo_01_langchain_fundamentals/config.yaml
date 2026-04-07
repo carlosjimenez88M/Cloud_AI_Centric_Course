@@ -1,0 +1,3 @@
+model: gpt-5-mini
+temperature: null
+max_tokens: 1000
