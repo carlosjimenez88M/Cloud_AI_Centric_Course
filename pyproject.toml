@@ -16,6 +16,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "pydantic>=2.10.6",
     "tiktoken>=0.12.0",
+    "langgraph-prebuilt>=1.0.9",
 ]
 
 [build-system]
@@ -24,6 +25,11 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 package = true
+
+[tool.uv.workspace]
+members = [
+    "modulo_01_langchain_fundamentals",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentic_ai"]

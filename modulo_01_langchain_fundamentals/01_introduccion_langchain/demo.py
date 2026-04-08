@@ -47,53 +47,55 @@ else:
 llm = ChatOpenAI(model="gpt-5-mini", temperature=None)
 
 logger.info("Testing ApiCall")
-print(
-    llm.invoke(
-        "Que es tan efimero en el pensamiento de Vargas LLosa en su libro "
-        "llamada a la tribu, que realmente vale la pena hacer una critica"
-    )
-)
+# print(
+#     llm.invoke(
+#         "Que es tan efimero en el pensamiento de Vargas LLosa en su libro "
+#         "llamada a la tribu, que realmente vale la pena hacer una critica"
+#     )
+# )
 
 # ==========================#
 # ---- Chat Structure ---- #
 # ==========================#
 
 messages = [
-    SystemMessage("You are a history tutor especialist in Latam Ideas"),
+    SystemMessage("Eres un especialista en culturas latinoamericanas vista desde un optica antropologica"),
     HumanMessage(
-        "Cual es el error en la llamada a la tribu de Vargas LLosa a nivel conceptual?"
+        "De qué trata la cancion de La Cuca: Señorita Caradepizza?"
     ),
     AIMessage(
-        "Cual es la critica puntual al libro el llamado de la tribu de Vargas llosa"
+        "Vas sa responder desde la antropologica latinoamericana, de manera muy pero muy breve , pero no superficial"
     ),
 ]
 
 print(llm.invoke(messages))
 
-# ==========================#
-# ---- Template cases ---- #
-# ==========================#
+# # ==========================#
 
-print("==" * 32)
-logger.info("Inicializando template para el caso de Steely Dan")
+# # ---- Template cases ---- #
+# # ==========================#
 
-topic = "Steely Dan"
-prompt = f"Dime 10 datos curiosos sobre la banda {topic}"
-print(llm.invoke(prompt))
-logger.info("Finalizando el ejemplo de template basico")
+# print("==" * 32)
+# logger.info("Inicializando template para el caso de Donde estan las rubias")
+
+# topic = "Donde estan las rubias?"
+# prompt = f"Dime 10 datos curiosos sobre la pelicula {topic}"
+# print(llm.invoke(prompt))
+# logger.info("Finalizando el ejemplo de template basico")
 
 
-# ============================#
-#  ---- Prompt Template ---- #
-# ============================#
+# # ============================#
+# #  ---- Prompt Template ---- #
+# # ============================#
+print('=='*64)
+prompt_template = PromptTemplate(
+    template="dime datos curiosos sobre {topic}")
 
-prompt_template = PromptTemplate(template="dime datos curiosos sobre {topic}")
-
-logger.info("Iniciando ejemplo con Dominic Miller")
-print(prompt_template.format(topic="Dominc Miller"))
-print(llm.invoke(prompt_template.invoke({"topic": "Dominic Miller"})))
-logger.info("Finalizando ejemplo de Dominic Miller")
-
+logger.info("Iniciando ejemplo con Freddy Mercury")
+#print(prompt_template.format(topic="Dominc Miller"))
+print(llm.invoke(prompt_template.invoke({"topic": "Freddy Mercury"})))
+logger.info("Finalizando ejemplo de Freddy Mercury")
+print('=='*64)
 
 # ===========================#
 # ---- Few Shot Prompt ---- #
@@ -131,7 +133,7 @@ examples = [
     },
 ]
 print(example_prompt.invoke(examples[0]).to_string())
-
+logger.info("Iniciando ejemplo con Few Shot Prompt")
 prompt_template = FewShotPromptTemplate(
     examples=examples,
     example_prompt=example_prompt,
@@ -145,3 +147,4 @@ response = llm.invoke(
     )
 )
 print(response.content)
+logger.info("Finalizando ejemplo con Few Shot Prompt")
