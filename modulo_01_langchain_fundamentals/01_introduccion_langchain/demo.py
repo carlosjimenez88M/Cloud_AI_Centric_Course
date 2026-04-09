@@ -75,18 +75,19 @@ print(llm.invoke(messages))
 # # ---- Template cases ---- #
 # # ==========================#
 
-# print("==" * 32)
-# logger.info("Inicializando template para el caso de Donde estan las rubias")
+print("==" * 32)
+logger.info("Inicializando template para el caso de Donde estan las rubias")
 
-# topic = "Donde estan las rubias?"
-# prompt = f"Dime 10 datos curiosos sobre la pelicula {topic}"
-# print(llm.invoke(prompt))
-# logger.info("Finalizando el ejemplo de template basico")
+topic = "Donde estan las rubias?"
+prompt = f"Dime 10 datos curiosos sobre la pelicula {topic}"
+print(llm.invoke(prompt))
+logger.info("Finalizando el ejemplo de template basico")
 
 
 # # ============================#
 # #  ---- Prompt Template ---- #
 # # ============================#
+
 print('=='*64)
 prompt_template = PromptTemplate(
     template="dime datos curiosos sobre {topic}")

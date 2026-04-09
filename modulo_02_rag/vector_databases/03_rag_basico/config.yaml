@@ -1,0 +1,7 @@
+# Lección 03 — RAG Básico: Recuperación + Generación
+llm_model: gpt-4o-mini
+embedding_model: text-embedding-3-small
+chunk_size: 500
+chunk_overlap: 100
+retrieval_k: 3
+max_tokens: 800

@@ -81,9 +81,9 @@ chain = llm | StrOutputParser()
 result = chain.invoke("Cual es la capital de Colombia?")
 print(result)
 
-##############################
-# ---- Parser Timestamp ---- #
-##############################
+# ##############################
+# # ---- Parser Timestamp ---- #
+# ##############################
 
 class DateResult(BaseModel):
     date: datetime = Field(description="A random datetime value")
@@ -92,9 +92,9 @@ llm_datetime = llm.with_structured_output(DateResult)
 result_time = llm_datetime.invoke("Generate a random datetime value")
 print(result_time.date)
 
-##############################
-# ---- Boolean Parser ---- #
-##############################
+# ##############################
+# # ---- Boolean Parser ---- #
+# ##############################
 
 class BoolResult(BaseModel):
     result: bool = Field(description="True or False answer")
@@ -103,9 +103,9 @@ llm_bool = llm.with_structured_output(BoolResult)
 result_bool = llm_bool.invoke("Are you an AI?")
 print(result_bool.result)
 
-#########################
-# ---- Dict Schema ---- #
-#########################
+# #########################
+# # ---- Dict Schema ---- #
+# #########################
 
 class UserInfo(TypedDict):
     name: Annotated[str, "Name of the user"]
@@ -118,9 +118,9 @@ print(llm_with_structure.invoke(
     "and this is my email danieljimenez@gmail.com"
 ))
 
-#============================#
-# ---- Pydantic Schemas ---- #
-#============================#
+# #============================#
+# # ---- Pydantic Schemas ---- #
+# #============================#
 
 class PydanticUserInfo(BaseModel):
     name: Annotated[str, Field(description="Name of the user")]
@@ -134,9 +134,9 @@ print(llm_pydantic.invoke(
     "and this is my email danieljimenez@gmail.com"
 ))
 
-#################################
-# ---- Dealing with Errors ---- #
-#################################
+# #################################
+# # ---- Dealing with Errors ---- #
+# #################################
 
 class Performer(BaseModel):
     name: Annotated[str, Field(description="Name of the performer")]
@@ -144,116 +144,116 @@ class Performer(BaseModel):
 
 llm_with_structure = llm.with_structured_output(Performer)
 response = llm_with_structure.invoke(
-    "What is a the best movies to Tom Hanks?, Top 5 Only please"
+    "What is a the best movies to Olga Lucia Alvira de Colombia?, Top 5 Only please thats if exist!!"
 )
 print(response)
 
-#======================#
-# ---- Fix Parser ---- #
-#======================#
-print('==' * 32)
+# #======================#
+# # ---- Fix Parser ---- #
+# #======================#
+# print('==' * 32)
 
-parser = PydanticOutputParser(pydantic_object=Performer)
-print(parser.parse(response.model_dump_json()))
+# parser = PydanticOutputParser(pydantic_object=Performer)
+# print(parser.parse(response.model_dump_json()))
 
-misformated_results = (
-    "{'name':'Tom Hanks', 'film_names':['Forrest Gump (1994)', "
-    "'Philadelphia (1993)', 'Saving Private Ryan (1998)', "
-    "'Cast Away (2000)', 'Apollo 13 (1995)']}"
-)
+# misformated_results = (
+#     "{'name':'Tom Hanks', 'film_names':['Forrest Gump (1994)', "
+#     "'Philadelphia (1993)', 'Saving Private Ryan (1998)', "
+#     "'Cast Away (2000)', 'Apollo 13 (1995)']}"
+# )
 
-try:
-    parser.parse(misformated_results)
-except OutputParserException as e:
-    print(f"[ERROR ESPERADO] Parser fallo: {e}")
+# try:
+#     parser.parse(misformated_results)
+# except OutputParserException as e:
+#     print(f"[ERROR ESPERADO] Parser fallo: {e}")
 
-# ----------------------------------------------------------------
-# APPROACH 1: with_structured_output con include_raw=True
-# ----------------------------------------------------------------
+# # ----------------------------------------------------------------
+# # APPROACH 1: with_structured_output con include_raw=True
+# # ----------------------------------------------------------------
 
-print('\n--- Approach 1: with_structured_output (previene el problema) ---')
-llm_structured = llm.with_structured_output(Performer, include_raw=True)
-raw_result = llm_structured.invoke(
-    "What is a the best movies to Tom Hanks?, Top 5 Only please"
-)
-print(f"Parsed OK: {raw_result['parsed']}")
-print(f"Parsing error: {raw_result['parsing_error']}")
+# print('\n--- Approach 1: with_structured_output (previene el problema) ---')
+# llm_structured = llm.with_structured_output(Performer, include_raw=True)
+# raw_result = llm_structured.invoke(
+#     "What is a the best movies to Tom Hanks?, Top 5 Only please"
+# )
+# print(f"Parsed OK: {raw_result['parsed']}")
+# print(f"Parsing error: {raw_result['parsing_error']}")
 
-# ----------------------------------------------------------------
-# APPROACH 2: LCEL fix chain (reemplaza OutputFixingParser)
-# ----------------------------------------------------------------
+# # ----------------------------------------------------------------
+# # APPROACH 2: LCEL fix chain (reemplaza OutputFixingParser)
+# # ----------------------------------------------------------------
 
-print('\n--- Approach 2: LCEL fix chain (reemplaza OutputFixingParser) ---')
+# print('\n--- Approach 2: LCEL fix chain (reemplaza OutputFixingParser) ---')
 
-FIX_PROMPT = PromptTemplate.from_template(
-    "Instructions:\n"
-    "{instructions}\n\n"
-    "Completion:\n"
-    "{completion}\n\n"
-    "Above, the Completion did not satisfy the constraints given in the Instructions.\n"
-    "Error:\n"
-    "{error}\n\n"
-    "Please try again. Only respond with an answer that satisfies the constraints "
-    "laid out in the Instructions:"
-)
-
-
-def build_fix_chain(base_parser, fix_llm):
-    """
-    Construye un chain LCEL que corrige JSON malformado usando el LLM.
-    Replica el comportamiento de OutputFixingParser.from_llm() usando
-    solo langchain_core primitives.
-    """
-    fix_chain = FIX_PROMPT | fix_llm | StrOutputParser() | base_parser
-
-    def attempt_parse_or_fix(malformed_text: str):
-        try:
-            return base_parser.parse(malformed_text)
-        except (OutputParserException, Exception) as exc:
-            return fix_chain.invoke({
-                "instructions": base_parser.get_format_instructions(),
-                "completion": malformed_text,
-                "error": str(exc),
-            })
-
-    return RunnableLambda(attempt_parse_or_fix)
+# FIX_PROMPT = PromptTemplate.from_template(
+#     "Instructions:\n"
+#     "{instructions}\n\n"
+#     "Completion:\n"
+#     "{completion}\n\n"
+#     "Above, the Completion did not satisfy the constraints given in the Instructions.\n"
+#     "Error:\n"
+#     "{error}\n\n"
+#     "Please try again. Only respond with an answer that satisfies the constraints "
+#     "laid out in the Instructions:"
+# )
 
 
-fix_chain = build_fix_chain(parser, llm)
+# def build_fix_chain(base_parser, fix_llm):
+#     """
+#     Construye un chain LCEL que corrige JSON malformado usando el LLM.
+#     Replica el comportamiento de OutputFixingParser.from_llm() usando
+#     solo langchain_core primitives.
+#     """
+#     fix_chain = FIX_PROMPT | fix_llm | StrOutputParser() | base_parser
 
-print(f"JSON malformado:\n  {misformated_results}\n")
-corrected = fix_chain.invoke(misformated_results)
-print(f"Resultado corregido: {corrected}")
+#     def attempt_parse_or_fix(malformed_text: str):
+#         try:
+#             return base_parser.parse(malformed_text)
+#         except (OutputParserException, Exception) as exc:
+#             return fix_chain.invoke({
+#                 "instructions": base_parser.get_format_instructions(),
+#                 "completion": malformed_text,
+#                 "error": str(exc),
+#             })
 
-# ----------------------------------------------------------------
-# APPROACH 3: with_fallbacks (para integrar en chains LCEL)
-# ----------------------------------------------------------------
-
-print('\n--- Approach 3: with_fallbacks (para integrar en chains LCEL) ---')
-
-
-def make_llm_fixer(base_parser, fix_llm):
-    fix_chain_inner = FIX_PROMPT | fix_llm | StrOutputParser() | base_parser
-
-    def fix_from_exception_dict(inputs: dict):
-        return fix_chain_inner.invoke({
-            "instructions": base_parser.get_format_instructions(),
-            "completion": inputs["input"],
-            "error": str(inputs["exception"]),
-        })
-
-    return RunnableLambda(fix_from_exception_dict)
+#     return RunnableLambda(attempt_parse_or_fix)
 
 
-robust_parser = (
-    RunnableLambda(lambda x: parser.parse(x["input"]))
-    .with_fallbacks(
-        [make_llm_fixer(parser, llm)],
-        exceptions_to_handle=(Exception,),
-        exception_key="exception",
-    )
-)
+# fix_chain = build_fix_chain(parser, llm)
 
-corrected_v2 = robust_parser.invoke({"input": misformated_results})
-print(f"Resultado corregido (with_fallbacks): {corrected_v2}")
-print('==' * 32)
+# print(f"JSON malformado:\n  {misformated_results}\n")
+# corrected = fix_chain.invoke(misformated_results)
+# print(f"Resultado corregido: {corrected}")
+
+# # ----------------------------------------------------------------
+# # APPROACH 3: with_fallbacks (para integrar en chains LCEL)
+# # ----------------------------------------------------------------
+
+# print('\n--- Approach 3: with_fallbacks (para integrar en chains LCEL) ---')
+
+
+# def make_llm_fixer(base_parser, fix_llm):
+#     fix_chain_inner = FIX_PROMPT | fix_llm | StrOutputParser() | base_parser
+
+#     def fix_from_exception_dict(inputs: dict):
+#         return fix_chain_inner.invoke({
+#             "instructions": base_parser.get_format_instructions(),
+#             "completion": inputs["input"],
+#             "error": str(inputs["exception"]),
+#         })
+
+#     return RunnableLambda(fix_from_exception_dict)
+
+
+# robust_parser = (
+#     RunnableLambda(lambda x: parser.parse(x["input"]))
+#     .with_fallbacks(
+#         [make_llm_fixer(parser, llm)],
+#         exceptions_to_handle=(Exception,),
+#         exception_key="exception",
+#     )
+# )
+
+# corrected_v2 = robust_parser.invoke({"input": misformated_results})
+# print(f"Resultado corregido (with_fallbacks): {corrected_v2}")
+# print('==' * 32)

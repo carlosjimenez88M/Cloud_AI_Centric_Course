@@ -1,0 +1,6 @@
+# Configuración global del Módulo 02
+# Cada lección puede sobreescribir estos valores en su propio config.yaml
+
+llm_model: gpt-4o-mini
+embedding_model: text-embedding-3-small
+max_tokens: 1000

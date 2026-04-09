@@ -1,0 +1,11 @@
+# Lección 04 — RAG Avanzado: Multi-Query y Compresión Contextual
+llm_model: gpt-4o-mini
+embedding_model: text-embedding-3-small
+chunk_size: 500
+chunk_overlap: 100
+retrieval_k: 5
+multi_query_count: 3
+# IMPORTANTE: con text-embedding-3-small, similitudes típicas mismo-tema ≈ 0.35-0.65
+# Un threshold alto (>0.7) filtra casi todo. Ajustar por corpus y modelo.
+compression_threshold: 0.40
+max_tokens: 1000
