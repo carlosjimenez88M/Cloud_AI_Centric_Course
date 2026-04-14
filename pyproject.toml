@@ -48,6 +48,6 @@ packages = ["src/agentic_ai"]
 [dependency-groups]
 dev = [
     "ipykernel>=7.2.0",
-    "jupyterlab>=4.5.5",
+    "jupyterlab",
     "ruff>=0.15.2",
 ]

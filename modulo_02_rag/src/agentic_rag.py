@@ -34,14 +34,15 @@ documentos_extraidos = loader.load()
 print(f"   -> Páginas extraídas del PDF: {len(documentos_extraidos)}")
 
 # Dividimos el texto en trozos (chunks) para que el retriever pueda sacar fragmentos semánticos viables
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=400)
 documentos_particionados = text_splitter.split_documents(documentos_extraidos)
+print(documentos_particionados)
 print(f"   -> Chunks generados para la BD Vectorial: {len(documentos_particionados)}")
 
 # Inicializamos el generador de Embeddings de OpenAI (modelo veloz ideal para RAG)
-embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings_model = OpenAIEmbeddings(model="text-embedding-3-large")
 
-print("2. Procesando los Embeddings y almacenando en Chroma en memoria (Esto puede tardar un poco...)")
+# print("2. Procesando los Embeddings y almacenando en Chroma en memoria (Esto puede tardar un poco...)")
 # Creamos la base de datos Chroma a partir de los chunks particionados
 vector_store = Chroma.from_documents(
     documents=documentos_particionados,
@@ -49,7 +50,9 @@ vector_store = Chroma.from_documents(
 )
 
 # Configuramos el recuperador buscando los 3 fragmentos más relevantes por cada iteración
-retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+
+retriever = vector_store.as_retriever(search_kwargs={"k": 4})
+print(retriever)
 
 
 # ====================================================================
@@ -87,7 +90,8 @@ def search_shakespeare_tool(query: str) -> str:
 # ====================================================================
 
 # El LLM actuará como cerebro del Agente (razonamiento y orquestación)
-llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+llm = ChatOpenAI(model="gpt-5.4-nano", 
+                 temperature=0.2)
 
 # Un System Prompt diseñado para forzar un "Agentic RAG" genuino con reflexión literaria y reintentos (Looping)
 system_prompt = """

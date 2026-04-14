@@ -69,13 +69,12 @@ print(answer)
 # ---- 04. creando un dataframe con pandas ---- #
 #################################################
 df = pd.DataFrame(answer, columns=column_names)
-print("\nPrimeras 10 filas (como DataFrame):")
 print(df)
 
 
-###########################################################
-# ---- 05. creando tools para el agente inteligente ----  #
-###########################################################
+# ###########################################################
+# # ---- 05. creando tools para el agente inteligente ----  #
+# ###########################################################
 
 @tool
 def list_tables_tool(config: RunnableConfig) -> List[str]:
@@ -115,9 +114,9 @@ def execute_sql_tool(query: str, config: RunnableConfig) -> Any:
         return f"Error ejecutando la consulta: {e}"
 
 
-##########################################################
-# ---- 06. probando los tools creados manualmente ----   #
-##########################################################
+# ##########################################################
+# # ---- 06. probando los tools creados manualmente ----   #
+# ##########################################################
 
 runnable_config = {'configurable': {'db_engine': db_engine}}
 print("\nProbando tool list_tables_tool:")
@@ -131,9 +130,9 @@ sample_query = "SELECT count(*) as total_ventas FROM sales"
 print(execute_sql_tool.invoke({"query": sample_query}, runnable_config))
 
 
-#######################################################
-# ---- 07. configurando el agente con langgraph ----  #
-#######################################################
+# #######################################################
+# # ---- 07. configurando el agente con langgraph ----  #
+# #######################################################
 # Inicializamos el Language Model de OpenAI a usar. El API KEY es provisto automáticamente vía variables de entorno.
 llm = ChatOpenAI(model="gpt-5.1", temperature=0)
 
@@ -175,15 +174,15 @@ except Exception as e:
     print(f"No se pudo guardar el grafo en PNG: {e}")
 
 
-################################################
-# ---- 08. ejecutando el agente text2sql ----  #
-################################################
+# ################################################
+# # ---- 08. ejecutando el agente text2sql ----  #
+# ################################################
 print("\n" + "="*80)
 print("INICIANDO AGENTE DE TEXTO A SQL (TEXT2SQL)".center(80))
 print("="*80)
 
 # Una pregunta de ejemplo en español que el agente debe resolver transformando a SQL automáticamente
-pregunta_usuario = "¿Cuántas ventas hay registradas en total y cuál es el promedio del precio y cantidad de los modelos en las transacciones?"
+pregunta_usuario = "¿Cuál es el día que más ventas tienes, y sobre que producto es , y cuál es el promedio de ese día en ventas y cómo se diferencia con el promedio de los día?"
 
 print(f"\nPregunta del usuario:\n> {pregunta_usuario}\n")
 
