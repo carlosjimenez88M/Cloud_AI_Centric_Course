@@ -22,10 +22,10 @@ from shared.config_loader import (
     get_module_root,
 )
 
-from .step1_ingest import GCSIngestor
-from .step2_split import DocumentSplitter
-from .step3_embed import EmbeddingIndexer
-from .step4_agent import AgenticRAG
+from step1_ingest import GCSIngestor
+from step2_split import DocumentSplitter
+from step3_embed import EmbeddingIndexer
+from step4_agent import AgenticRAG
 
 log = get_logger("rag.main")
 

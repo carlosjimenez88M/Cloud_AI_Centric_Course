@@ -9,10 +9,9 @@ Cómo correr:
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "src" / "01_role_base"))
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+_ROOT = Path(__file__).parent
+sys.path.insert(0, str(_ROOT / "src"))
+sys.path.insert(0, str(_ROOT / "src" / "01_role_base"))
 
-from main import main  # src/01_role_base/main.py
-
-if __name__ == "__main__":
-    main()
+import main as _m
+_m.main()

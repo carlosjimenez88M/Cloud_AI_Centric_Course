@@ -25,7 +25,7 @@ from shared.config_loader import (
     get_module_root,
 )
 
-from .graph import OrchestrationGraph
+from graph import OrchestrationGraph
 
 log = get_logger("orchestration.main")
 

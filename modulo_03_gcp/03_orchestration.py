@@ -11,10 +11,9 @@ Cómo correr:
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
-sys.path.insert(0, str(Path(__file__).parent / "src" / "03_orchestration"))
+_ROOT = Path(__file__).parent
+sys.path.insert(0, str(_ROOT / "src"))
+sys.path.insert(0, str(_ROOT / "src" / "03_orchestration"))
 
-from main import main   # src/03_orchestration/main.py
-
-if __name__ == "__main__":
-    main()
+import main as _m
+_m.main()

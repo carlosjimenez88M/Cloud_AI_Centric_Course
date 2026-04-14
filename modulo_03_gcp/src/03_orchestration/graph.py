@@ -38,8 +38,8 @@ from langchain_core.runnables import Runnable
 from langgraph.graph import END, START, StateGraph
 from shared.logger import get_logger, console
 
-from .chains import build_chains, get_chain
-from .router import LLMRouter
+from chains import build_chains, get_chain
+from router import LLMRouter
 
 try:
     from typing import TypedDict

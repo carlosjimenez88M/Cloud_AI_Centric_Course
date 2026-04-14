@@ -17,7 +17,7 @@ from google import genai
 from google.genai.types import GenerateContentConfig, ThinkingConfig
 from shared.logger import get_logger, console
 
-from .personas import PERSONAS, PERSONA_LABELS
+from personas import PERSONAS, PERSONA_LABELS
 
 log = get_logger("role_base.engine")
 

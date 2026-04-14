@@ -15,6 +15,6 @@ Módulos:
   orchestration.graph    — Grafo LangGraph que orquesta todo
 """
 
-from .graph import OrchestrationGraph, OrchestrationState
+from graph import OrchestrationGraph, OrchestrationState
 
 __all__ = ["OrchestrationGraph", "OrchestrationState"]

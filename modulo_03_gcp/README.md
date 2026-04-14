@@ -9,9 +9,9 @@ de IA generativa de producción usando Google Cloud Platform.
 
 | Script | Concepto | Tecnología |
 |--------|----------|-----------|
-| `01-role-base.py` | Role-Based Prompting | `google-genai` + Vertex AI |
-| `02-rag-pipeline.py` | RAG Pipeline (4 pasos) | GCS + ChromaDB + LangChain |
-| `03-orchestration.py` | Orquestación profunda | LangGraph + Chaining + Routing |
+| `01_role_base.py` | Role-Based Prompting | `google-genai` + Vertex AI |
+| `02_rag_pipeline.py` | RAG Pipeline (4 pasos) | GCS + ChromaDB + LangChain |
+| `03_orchestration.py` | Orquestación profunda | LangGraph + Chaining + Routing |
 
 ---
 
@@ -19,6 +19,9 @@ de IA generativa de producción usando Google Cloud Platform.
 
 ```
 modulo_03_gcp/
+├── 01_role_base.py          ← Launcher: Los 4 Fantásticos + Arjona
+├── 02_rag_pipeline.py       ← Launcher: RAG completo (Steps 1-4)
+├── 03_orchestration.py      ← Launcher: Orquestación con routing
 ├── config.yaml              ← Configuración central (modelo, RAG, embeddings)
 ├── pyproject.toml           ← Dependencias y paquetes instalables
 │
@@ -31,21 +34,24 @@ modulo_03_gcp/
     │   ├── logger.py        ← Logger coloreado con Rich
     │   └── config_loader.py ← Carga config.yaml + .env
     │
-    ├── rag/                 ← Pipeline RAG modular (4 steps)
+    ├── 01_role_base/        ← Role-Based Prompting (Los 4 Fantásticos + Arjona)
+    │   ├── personas.py      ← Definición de personas y etiquetas
+    │   ├── tasks.py         ← Tareas temáticas (4 TODOs)
+    │   ├── engine.py        ← PersonaEngine: llamadas a Vertex AI + métricas
+    │   └── main.py          ← Orquestación y ranking final
+    │
+    ├── 02_rag/              ← Pipeline RAG modular (4 steps)
     │   ├── step1_ingest.py  ← Sube PDF a Google Cloud Storage
     │   ├── step2_split.py   ← Divide en chunks semánticos
     │   ├── step3_embed.py   ← Embeddings (Vertex AI) + ChromaDB
     │   └── step4_agent.py   ← Agente LangGraph ReAct
     │
-    ├── orchestration/       ← Orquestación profunda
-    │   ├── prompts.py       ← Plantillas por tipo de análisis
-    │   ├── chains.py        ← Cadenas LangChain especializadas
-    │   ├── router.py        ← Router LLM (clasifica intención)
-    │   └── graph.py         ← Grafo LangGraph (Router→RAG→Chain→Síntesis)
-    │
-    ├── 01-role-base.py      ← Entrada: Los 4 Fantásticos + Arjona
-    ├── 02-rag-pipeline.py   ← Entrada: RAG completo (Steps 1-4)
-    └── 03-orchestration.py  ← Entrada: Orquestación con routing
+    └── 03_orchestration/    ← Orquestación profunda
+        ├── prompts.py       ← Plantillas por tipo de análisis
+        ├── chains.py        ← Cadenas LangChain especializadas
+        ├── router.py        ← Router LLM (clasifica intención)
+        ├── graph.py         ← Grafo LangGraph (Router→RAG→Chain→Síntesis)
+        └── main.py          ← Entrada del módulo de orquestación
 ```
 
 ---
@@ -85,10 +91,10 @@ uv sync
 
 > **Todos los comandos se ejecutan desde `modulo_03_gcp/`**
 
-### Script 1 — Role-Based Prompting
+### Lección 1 — Role-Based Prompting
 
 ```bash
-uv run src/01-role-base.py
+uv run 01_role_base.py
 ```
 
 Ejecuta los **4 TODOs** con los **6 personajes** (6 × 4 = 24 llamadas a la API):
@@ -112,10 +118,10 @@ Ejecuta los **4 TODOs** con los **6 personajes** (6 × 4 = 24 llamadas a la API)
 
 ---
 
-### Script 2 — RAG Pipeline
+### Lección 2 — RAG Pipeline
 
 ```bash
-uv run src/02-rag-pipeline.py
+uv run 02_rag_pipeline.py
 ```
 
 Ejecuta el pipeline de 4 pasos sobre **Las Mil y Una Noches**:
@@ -136,11 +142,11 @@ STEP 4 — Agent    : Agente LangGraph ReAct responde 4 preguntas demo
 
 ---
 
-### Script 3 — Orquestación Profunda
+### Lección 3 — Orquestación Profunda
 
 ```bash
 # Requiere que el STEP 3 del RAG ya se haya ejecutado
-uv run src/03-orchestration.py
+uv run 03_orchestration.py
 ```
 
 Pipeline de orquestación con **routing dinámico** y **chaining**:
@@ -196,16 +202,32 @@ rag:
 
 ---
 
+## Dónde ver la base vectorial en GCP
+
+Después de ejecutar la Lección 2 con `sync_chroma_gcs: true` en `config.yaml`, la base
+vectorial ChromaDB queda sincronizada en Google Cloud Storage.
+
+Para verla:
+
+1. Abre la [GCS Console](https://console.cloud.google.com/storage/browser)
+2. Navega al bucket: `mlops-practices-wb-cap2-end_to_end`
+3. Entra a la carpeta: `modulo_03_rag/chroma_db/`
+
+Allí encontrarás los archivos internos de ChromaDB (SQLite + segmentos HNSW) que
+conforman el índice vectorial del corpus de Las Mil y Una Noches.
+
+---
+
 ## Paquetes instalados
 
-Los paquetes `shared`, `rag` y `orchestration` se instalan como paquetes
-Python del entorno virtual. Esto permite importarlos sin manipulación de paths:
+Solo el paquete `shared` se instala como paquete Python del entorno virtual.
+Los módulos `01_role_base`, `02_rag` y `03_orchestration` se cargan mediante
+`sys.path` desde los launchers de la raíz, lo que permite usar nombres de carpeta
+con prefijos numéricos (no válidos como identificadores Python):
 
 ```python
 from shared.logger import get_logger
 from shared.config_loader import load_config
-from rag import GCSIngestor, DocumentSplitter, EmbeddingIndexer, AgenticRAG
-from orchestration import OrchestrationGraph
 ```
 
 ---

@@ -14,9 +14,9 @@ from typing import Any
 from shared.logger import get_logger, console
 from shared.config_loader import load_config, get_project_id, get_location
 
-from .engine import PersonaEngine, print_result, print_best_response
-from .personas import PERSONA_LABELS
-from .tasks import TASKS
+from engine import PersonaEngine, print_result, print_best_response
+from personas import PERSONA_LABELS
+from tasks import TASKS
 
 log = get_logger("role_base.main")
 

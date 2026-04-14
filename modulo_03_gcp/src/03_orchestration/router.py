@@ -13,7 +13,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_google_vertexai import ChatVertexAI
 from shared.logger import get_logger
 
-from .prompts import ROUTER_PROMPT
+from prompts import ROUTER_PROMPT
 
 log = get_logger("orchestration.router")
 

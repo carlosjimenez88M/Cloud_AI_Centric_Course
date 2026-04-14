@@ -11,8 +11,8 @@ Uso:
     from role_base.tasks import TASKS
 """
 
-from .personas import PERSONAS, PERSONA_LABELS
-from .tasks import TASKS
-from .engine import PersonaEngine
+from personas import PERSONAS, PERSONA_LABELS
+from tasks import TASKS
+from engine import PersonaEngine
 
 __all__ = ["PERSONAS", "PERSONA_LABELS", "TASKS", "PersonaEngine"]

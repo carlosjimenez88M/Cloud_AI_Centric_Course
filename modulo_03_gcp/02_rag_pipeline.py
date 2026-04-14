@@ -9,12 +9,9 @@ Cómo correr:
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+_ROOT = Path(__file__).parent
+sys.path.insert(0, str(_ROOT / "src"))
+sys.path.insert(0, str(_ROOT / "src" / "02_rag"))
 
-# Agrega src/02_rag al path para imports dentro del módulo
-sys.path.insert(0, str(Path(__file__).parent / "src" / "02_rag"))
-
-from main import main   # src/02_rag/main.py
-
-if __name__ == "__main__":
-    main()
+import main as _m
+_m.main()

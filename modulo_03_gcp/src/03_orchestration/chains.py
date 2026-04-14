@@ -14,7 +14,7 @@ from langchain_core.runnables import Runnable
 from langchain_google_vertexai import ChatVertexAI
 from shared.logger import get_logger
 
-from .prompts import CHAIN_PROMPTS, SYNTHESIS_PROMPT
+from prompts import CHAIN_PROMPTS, SYNTHESIS_PROMPT
 
 log = get_logger("orchestration.chains")
 
