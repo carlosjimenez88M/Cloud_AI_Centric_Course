@@ -6,8 +6,14 @@ Cómo correr:
     cd modulo_03_gcp
     uv run 02_rag_pipeline.py
 """
+import os
 import sys
+import warnings
 from pathlib import Path
+
+warnings.filterwarnings("ignore")
+os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
+os.environ.setdefault("GRPC_TRACE", "")
 
 _ROOT = Path(__file__).parent
 sys.path.insert(0, str(_ROOT / "src"))
