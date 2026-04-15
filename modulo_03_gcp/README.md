@@ -5,6 +5,146 @@ aplicaciones de IA generativa de producción usando Google Cloud Platform.
 
 ---
 
+## ⚡ Quick Start
+
+```bash
+cd modulo_03_gcp
+uv sync
+uv run verify_setup.py        # verifica que GCP está listo
+uv run 01_role_base.py         # lección 1 — role prompting (~5 min)
+uv run 02_rag_pipeline.py      # lección 2 — RAG pipeline (~3 min)
+uv run 03_orchestration.py     # lección 3 — orquestación (~2 min)
+```
+
+---
+
+## Conceptos clave — antes de empezar
+
+Si eres nuevo en IA generativa, estos conceptos son la base de todo lo que hace este módulo.
+Léelos una vez y el código te parecerá mucho más claro.
+
+### ¿Qué es RAG? (Retrieval-Augmented Generation)
+
+Un LLM sabe mucho sobre el mundo en general, pero **no conoce tu libro** (ni tu base de datos,
+ni tus documentos internos). Sin RAG, si le preguntas "¿qué dice la página 47 de Las Mil y Una
+Noches?", el modelo inventará una respuesta plausible — no la real.
+
+**RAG resuelve esto en 2 pasos:**
+
+```
+1. RETRIEVE (recuperar): busca en tu documento los fragmentos más relevantes para la pregunta
+2. GENERATE (generar):  le das esos fragmentos al LLM como contexto → responde con datos reales
+```
+
+Es la diferencia entre un estudiante que adivina la respuesta y uno que primero busca en el libro.
+
+---
+
+### ¿Qué son los embeddings vectoriales?
+
+Un embedding es la forma en que convertimos texto en números para que la computadora pueda
+comparar significados — no solo palabras iguales, sino ideas similares.
+
+```
+"Scheherazade cuenta historias" → [0.23, -0.81, 0.44, 0.17, ...]  (768 números)
+"La narradora relata cuentos"   → [0.21, -0.79, 0.46, 0.19, ...]  (muy parecidos!)
+"El gato toma café"             → [-0.54, 0.32, -0.11, 0.88, ...]  (muy diferentes)
+```
+
+El modelo `text-embedding-004` de Vertex AI convierte cada fragmento del libro en 768 números.
+Cuando llega una pregunta, también la convierte a 768 números y busca los fragmentos **más
+cercanos** en ese espacio matemático. Eso es búsqueda semántica.
+
+---
+
+### ¿Qué es ChromaDB?
+
+**ChromaDB es una base de datos vectorial** — almacena embeddings y permite búsquedas semánticas
+ultrarrápidas. Es como una base de datos normal (SQL), pero en vez de buscar por texto exacto,
+busca por *similitud de significado*.
+
+```
+Base de datos SQL:       SELECT * WHERE texto = 'Scheherazade'   → solo coincidencias exactas
+ChromaDB (vectorial):    busca('¿quién cuenta historias?')        → encuentra fragmentos sobre
+                                                                     Scheherazade aunque no
+                                                                     la mencionen por nombre
+```
+
+En este módulo, la Lección 2 construye el ChromaDB: lee el PDF → divide en fragmentos → genera
+embeddings con Vertex AI → guarda todo en `data/chroma_db/`. La Lección 3 lo usa para hacer
+búsquedas semánticas dentro del pipeline de orquestación.
+
+---
+
+### ¿Qué es la Orquestación con cadenas LangChain?
+
+La **orquestación** es el patrón de conectar múltiples componentes de IA en un flujo estructurado.
+En vez de hacer una sola llamada al LLM, se encadenan varios pasos especializados:
+
+- Un **Router** clasifica la intención de la pregunta (¿es narrativa? ¿filosófica? ¿creativa?)
+- Un **Retriever** busca los fragmentos relevantes del corpus con RAG
+- Una **Cadena especializada** analiza según el tipo de pregunta (cada cadena tiene su propio prompt)
+- Un **Sintetizador** integra todo en una respuesta final coherente
+
+Esto es más poderoso que una sola llamada al LLM porque cada componente está optimizado para
+su tarea específica, con prompts dedicados y parámetros ajustados.
+
+---
+
+### ¿Qué es Vertex AI?
+
+**Vertex AI** es la plataforma de IA de Google Cloud. En este módulo usamos dos servicios:
+
+| Servicio | Para qué lo usamos | Costo aproximado |
+|----------|-------------------|-----------------|
+| **Gemini Flash Lite** (LLM) | Generar texto — análisis, poemas, síntesis | ~$0.001 / 1000 tokens |
+| **text-embedding-004** | Convertir fragmentos del libro a vectores | ~$0.00002 / 1000 tokens |
+
+Con los $300 de créditos gratuitos de GCP puedes correr el demo **miles de veces** sin pagar nada.
+
+---
+
+## Arquitectura general
+
+```mermaid
+flowchart LR
+    subgraph L1["Lección 1 — Role-Based Prompting"]
+        P1["6 Personas\n(F4 + Arjona)"] --> E1["PersonaEngine\n(google-genai)"]
+        E1 --> R1["4 Tareas\nRanking de calidad"]
+    end
+
+    subgraph L2["Lección 2 — RAG Pipeline"]
+        S1["PDF Las Mil\ny Una Noches"] --> S2["Step 1: GCS\nUpload"]
+        S2 --> S3["Step 2: Split\nChunks"]
+        S3 --> S4["Step 3: Embed\nVertex AI → ChromaDB"]
+        S4 --> S5["Step 4: Agent\nLangGraph ReAct"]
+    end
+
+    subgraph L3["Lección 3 — Orquestación"]
+        Q["Pregunta"] --> RO["Router LLM\nClasifica intención"]
+        RO --> RAG["RAG\nRetrieval"]
+        RAG --> CH["Chain\nstory | character\nphilosophy | creative"]
+        CH --> SY["Synthesizer\nRespuesta final"]
+    end
+
+    subgraph GCP["☁️ Google Cloud Platform"]
+        VA["Vertex AI\nGemini Flash Lite"]
+        EMB["text-embedding-004"]
+        GCS["Cloud Storage\nBucket"]
+        DB[(ChromaDB)]
+    end
+
+    E1 -.-> VA
+    S2 -.-> GCS
+    S4 -.-> EMB
+    S4 -.-> DB
+    S5 -.-> VA
+    RAG -.-> DB
+    RO & CH & SY -.-> VA
+```
+
+---
+
 ## Objetivos
 
 | Lección | Concepto | Tecnología |
