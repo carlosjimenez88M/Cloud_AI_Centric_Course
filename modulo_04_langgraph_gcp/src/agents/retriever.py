@@ -84,7 +84,8 @@ def retriever_node(
     log.info(f"  {len(docs)} fragmento(s) recuperado(s):")
     for i, doc in enumerate(docs[:3], 1):   # muestra preview de los 3 primeros
         page = doc.metadata.get("page", "?")
-        preview = doc.page_content[:80].replace("\n", " ").strip()
+        # .split() colapsa tabs/espacios múltiples del PDF en un solo espacio
+        preview = " ".join(doc.page_content.split())[:90]
         log.info(f"    [{i}] Pág.{page}: [dim]{preview}...[/dim]")
 
     # Formatea los documentos con metadata

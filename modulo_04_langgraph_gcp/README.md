@@ -3,21 +3,26 @@
 ## ⚡ Quick Start (ya tienes cuenta GCP y todo instalado)
 
 ```bash
-# 1. Ve a la carpeta del módulo
-cd modulo_04_langgraph_gcp
+# 0. PRIMERO — construye el índice vectorial (solo una vez por máquina)
+cd modulo_03_gcp && uv sync && uv run 02_rag_pipeline.py
+cd ../modulo_04_langgraph_gcp
 
-# 2. Instala dependencias
+# 1. Instala dependencias
 uv sync
 
-# 3. Verifica que todo está correcto
+# 2. Verifica entorno (11 checks automáticos)
 uv run verify_setup.py
 
-# 4. Corre el demo completo (3 preguntas)
+# 3. Demo completo — 3 preguntas, 3 flujos (~50 segundos)
 uv run run_demo.py
 
-# 5. Haz tu propia pregunta
+# 4. Tu propia pregunta
 uv run run_demo.py --query "¿Quién era Scheherazade?"
 ```
+
+> **⚠️ Importante:** El índice vectorial (`data/chroma_db/`) está en `.gitignore` porque es
+> un archivo binario de ~5 MB generado localmente. Al clonar el repo o en una máquina nueva
+> siempre necesitas ejecutar el **paso 0** primero (~3 minutos, solo la primera vez).
 
 > Si es tu primera vez con GCP, lee la **PARTE 1** antes de continuar.
 
@@ -73,35 +78,46 @@ de la empresa" hecho código.
 
 ```mermaid
 flowchart TD
-    U([🧑 Usuario\nHace una pregunta]) --> S
+    U([🧑 Usuario]) -->|pregunta| S
 
-    subgraph MA["🤖 Sistema Multi-Agente · LangGraph"]
-        direction TB
-        S["🎯 Supervisor Agent\nClasifica intención y orquesta"]
-        R["📚 Retriever Agent\nBúsqueda semántica en el libro"]
-        AN["🔍 Analyst Agent\nAnálisis literario profundo"]
-        CR["🎨 Creative Agent\nPoemas y canciones estilo Arjona"]
-        SY["✍️ Synthesizer Agent\nIntegra todo en respuesta final"]
-    end
-
-    subgraph GCP["☁️ Google Cloud Platform"]
-        DB[(ChromaDB\nVector Store\n302 vectores)]
-        VA["Vertex AI\nGemini Flash Lite\ngoogle-genai"]
+    subgraph GCP["☁️ Google Cloud Platform · Vertex AI"]
+        subgraph MA["🤖 Sistema Multi-Agente — LangGraph StateGraph"]
+            S["🎯 Supervisor\nClasifica intent + orquesta"]
+            R["📚 Retriever\nBúsqueda semántica RAG"]
+            AN["🔍 Analyst\nAnálisis literario profundo"]
+            CR["🎨 Creative\nPoemas y canciones Arjona"]
+            SY["✍️ Synthesizer\nRespuesta final integrada"]
+        end
+        DB[(ChromaDB\nVector Store)]
+        EMB["text-embedding-004\nVertex AI Embeddings"]
+        LLM["gemini-2.5-flash-lite\nVertex AI Gemini"]
     end
 
     U --> S
-    S -->|"1 — Siempre primero"| R
-    R <-->|"Búsqueda semántica\ntext-embedding-004"| DB
-    R -->|"Contexto recuperado"| S
-    S -->|"2a — Query analítica"| AN
-    S -->|"2b — Query creativa"| CR
-    AN -->|"Análisis literario"| S
-    CR -->|"Poema / canción"| S
-    S -->|"3 — Todo listo"| SY
-    SY --> Z([💬 Respuesta Final\ncon citas del texto])
 
-    S & R & AN & CR & SY -.->|"LLM calls"| VA
+    S -->|"① siempre primero"| R
+    R <-->|"query semántica"| EMB
+    EMB <-->|"302 vectores"| DB
+    R -->|"contexto + páginas"| S
+
+    S -->|"② analytical"| AN
+    S -->|"② creative"| CR
+    S -->|"② hybrid\nambos"| AN
+    S -->|"② hybrid\nambos"| CR
+
+    AN -->|resultado| S
+    CR -->|resultado| S
+
+    S -->|"③ todo listo"| SY
+    SY -->|respuesta| Z([💬 Respuesta Final])
+
+    S & R & AN & CR & SY -.->|API calls| LLM
 ```
+
+> **Los 3 flujos posibles según la query:**
+> - `analytical` → Supervisor → Retriever → **Analyst** → Synthesizer
+> - `creative`   → Supervisor → Retriever → **Creative** → Synthesizer
+> - `hybrid`     → Supervisor → Retriever → **Analyst + Creative** → Synthesizer
 
 ### ¿Cómo fluye una pregunta por el sistema?
 

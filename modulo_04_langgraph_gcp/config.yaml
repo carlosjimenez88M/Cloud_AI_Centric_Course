@@ -3,14 +3,17 @@
 # ═══════════════════════════════════════════════════════════════════
 
 # ── Modelo LLM principal ──────────────────────────────────────────
-# gemini-2.5-flash-lite  — versión lite: rápida, económica, soporta budget=0
-# Alternativas (descomenta y ajusta thinking_budget):
-#   gemini-2.5-flash  → thinking_budget: 0  (rápido, completo)
-#   gemini-2.5-pro    → thinking_budget: 1024 (no soporta 0)
+# gemini-2.5-flash-lite — rápido, económico, ideal para demos.
+# Alternativas:
+#   gemini-2.5-flash  — más capaz, misma velocidad
+#   gemini-2.5-pro    — más potente, requiere más tiempo y costo
+#
+# NOTA: thinking_budget NO se usa en este módulo porque usamos
+# ChatVertexAI (LangChain), que no expone ese parámetro directamente.
+# Solo es relevante si usas google-genai SDK (modulo_03_gcp).
 model:
   name: gemini-2.5-flash-lite
   location: us-central1
-  thinking_budget: 0      # 0 = desactivado (soportado en flash-lite y flash)
   temperature: 0.3
   max_output_tokens: 3000
 

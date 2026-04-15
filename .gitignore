@@ -6,9 +6,15 @@
 # ── Credenciales y secretos ────────────────────────────────────────
 # NUNCA subir claves ni archivos de credenciales al repositorio.
 .env
-.env.*
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
 .envrc
-!.env.example        # Sí subir el template vacío
+# Los .env.example SÍ se commitean — plantillas sin valores reales
+!.env.example
+!**/.env.example
 
 # Google Cloud — service account keys
 *service-account*.json
