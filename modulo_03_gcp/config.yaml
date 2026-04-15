@@ -12,7 +12,7 @@ model:
   location: us-central1
   thinking_budget: 0      # 0 = desactivado (soportado en flash-lite y flash)
   temperature: 0.3
-  max_output_tokens: 2000
+  max_output_tokens: 5000
 
 # ── Modelo de embeddings ──────────────────────────────────────────
 embedding:

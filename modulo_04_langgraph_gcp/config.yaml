@@ -1,0 +1,31 @@
+# ═══════════════════════════════════════════════════════════════════
+#  modulo_04_langgraph_gcp — Configuración central del módulo
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Modelo LLM principal ──────────────────────────────────────────
+# gemini-2.5-flash-lite  — versión lite: rápida, económica, soporta budget=0
+# Alternativas (descomenta y ajusta thinking_budget):
+#   gemini-2.5-flash  → thinking_budget: 0  (rápido, completo)
+#   gemini-2.5-pro    → thinking_budget: 1024 (no soporta 0)
+model:
+  name: gemini-2.5-flash-lite
+  location: us-central1
+  thinking_budget: 0      # 0 = desactivado (soportado en flash-lite y flash)
+  temperature: 0.3
+  max_output_tokens: 3000
+
+# ── Modelo de embeddings ──────────────────────────────────────────
+embedding:
+  model: text-embedding-004   # Modelo estable de Vertex AI
+
+# ── Configuración RAG ─────────────────────────────────────────────
+rag:
+  # Ruta relativa desde modulo_04_langgraph_gcp/ al ChromaDB de modulo_03
+  # Este ChromaDB fue construido en el módulo anterior con 302 vectores
+  chroma_path: ../modulo_03_gcp/data/chroma_db
+  collection: mily_una_noches
+  top_k: 5
+
+# ── Multi-Agente ──────────────────────────────────────────────────
+multi_agent:
+  max_iterations: 6   # Anti-loop: máximo de ciclos en el grafo
