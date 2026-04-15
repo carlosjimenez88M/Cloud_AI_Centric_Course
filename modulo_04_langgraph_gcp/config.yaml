@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════
-#  modulo_03_gcp — Configuración central del módulo
+#  modulo_04_langgraph_gcp — Configuración central del módulo
 # ═══════════════════════════════════════════════════════════════════
 
 # ── Modelo LLM principal ──────────────────────────────────────────
@@ -12,39 +12,20 @@ model:
   location: us-central1
   thinking_budget: 0      # 0 = desactivado (soportado en flash-lite y flash)
   temperature: 0.3
-  max_output_tokens: 5000
+  max_output_tokens: 3000
 
 # ── Modelo de embeddings ──────────────────────────────────────────
 embedding:
   model: text-embedding-004   # Modelo estable de Vertex AI
-  dimension: 768
 
 # ── Configuración RAG ─────────────────────────────────────────────
 rag:
-  # GCS — bucket existente del proyecto
-  bucket: mlops-practices-wb-cap2-end_to_end
-  bucket_prefix: modulo_03_rag/
-
-  # ChromaDB — persistencia local
-  chroma_path: data/chroma_db
+  # Ruta relativa desde modulo_04_langgraph_gcp/ al ChromaDB de modulo_03
+  # Este ChromaDB fue construido en el módulo anterior con 302 vectores
+  chroma_path: ../modulo_03_gcp/data/chroma_db
   collection: mily_una_noches
-
-  # Chunking
-  chunk_size: 1000
-  chunk_overlap: 200
-
-  # Retrieval
   top_k: 5
 
-  # Fuente de documentos (relativo a modulo_03_gcp/)
-  database_path: src/database
-
-  # Demo mode: limita las páginas indexadas para pruebas rápidas.
-  # 0 = sin límite (índice completo, ~16 min para Las Mil y Una Noches)
-  max_pages: 150
-
-  # ── GCS Sync para ChromaDB ─────────────────────────────────────────────────
-  # true  = después de indexar, sincroniza ChromaDB a GCS (visible en Console)
-  # false = solo local
-  sync_chroma_gcs: true
-  chroma_gcs_prefix: modulo_03_rag/chroma_db/
+# ── Multi-Agente ──────────────────────────────────────────────────
+multi_agent:
+  max_iterations: 6   # Anti-loop: máximo de ciclos en el grafo

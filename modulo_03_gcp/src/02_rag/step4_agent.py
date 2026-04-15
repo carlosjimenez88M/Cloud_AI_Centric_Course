@@ -96,7 +96,7 @@ def build_graph(
         project=project_id,
         location=location,
         temperature=0.3,
-        max_output_tokens=2000,
+        max_output_tokens=5000,
     )
     llm_with_tools = llm.bind_tools(tools)
     tool_node = ToolNode(tools)
