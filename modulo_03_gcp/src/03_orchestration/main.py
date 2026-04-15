@@ -27,6 +27,8 @@ from shared.config_loader import (
 
 from graph import OrchestrationGraph
 
+import warnings as _warnings
+
 log = get_logger("orchestration.main")
 
 
@@ -42,11 +44,13 @@ def _load_vector_store(
             f"ChromaDB no encontrado en {chroma_path}.\n"
             "  Ejecuta primero: uv run src/rag/main.py"
         )
-    embeddings = VertexAIEmbeddings(
-        model_name=embedding_model,
-        project=project_id,
-        location=location,
-    )
+    with _warnings.catch_warnings():
+        _warnings.simplefilter("ignore")
+        embeddings = VertexAIEmbeddings(
+            model_name=embedding_model,
+            project=project_id,
+            location=location,
+        )
     store = Chroma(
         collection_name=collection_name,
         embedding_function=embeddings,

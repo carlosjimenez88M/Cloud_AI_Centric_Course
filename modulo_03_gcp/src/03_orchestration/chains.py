@@ -16,6 +16,8 @@ from shared.logger import get_logger
 
 from prompts import CHAIN_PROMPTS, SYNTHESIS_PROMPT
 
+import warnings as _warnings
+
 log = get_logger("orchestration.chains")
 
 
@@ -33,13 +35,15 @@ def build_chains(
         Diccionario con claves: "story", "character", "philosophy", "creative",
         "synthesis".
     """
-    llm = ChatVertexAI(
-        model_name=model_name,
-        project=project_id,
-        location=location,
-        temperature=temperature,
-        max_output_tokens=max_output_tokens,
-    )
+    with _warnings.catch_warnings():
+        _warnings.simplefilter("ignore")
+        llm = ChatVertexAI(
+            model_name=model_name,
+            project=project_id,
+            location=location,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
+        )
     parser = StrOutputParser()
 
     chains: dict[str, Runnable] = {}

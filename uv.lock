@@ -677,7 +677,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=7.2.0" },
-    { name = "jupyterlab", specifier = ">=4.5.5" },
+    { name = "jupyterlab" },
     { name = "ruff", specifier = ">=0.15.2" },
 ]
 

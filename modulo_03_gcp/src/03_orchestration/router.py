@@ -15,6 +15,8 @@ from shared.logger import get_logger
 
 from prompts import ROUTER_PROMPT
 
+import warnings as _warnings
+
 log = get_logger("orchestration.router")
 
 VALID_ROUTES = frozenset({"story", "character", "philosophy", "creative"})
@@ -34,13 +36,15 @@ class LLMRouter:
     """
 
     def __init__(self, project_id: str, location: str, model_name: str) -> None:
-        llm = ChatVertexAI(
-            model_name=model_name,
-            project=project_id,
-            location=location,
-            temperature=0.0,       # Temperatura 0 para clasificación determinista
-            max_output_tokens=10,  # Solo necesitamos una palabra
-        )
+        with _warnings.catch_warnings():
+            _warnings.simplefilter("ignore")
+            llm = ChatVertexAI(
+                model_name=model_name,
+                project=project_id,
+                location=location,
+                temperature=0.0,       # Temperatura 0 para clasificación determinista
+                max_output_tokens=10,  # Solo necesitamos una palabra
+            )
         self._chain = ROUTER_PROMPT | llm | StrOutputParser()
         log.info(f"LLMRouter listo — modelo: [cyan]{model_name}[/cyan]")
 
