@@ -56,29 +56,126 @@ modular y extensible.
 
 ---
 
-## ¿Qué es un Sistema Multi-Agente? (para principiantes)
+## Conceptos clave — antes de empezar
 
-Imagina la empresa de Las Mil y Una Noches:
+Si eres nuevo en IA generativa, estos conceptos son la base de todo lo que hace este módulo.
+Léelos una vez y el código te parecerá mucho más claro.
 
-| Rol en la empresa | Agente en este sistema | ¿Qué hace? |
-|---|---|---|
-| Gerente general | **Supervisor** | Recibe la petición, decide quién la atiende |
-| Archivista | **Retriever** | Busca los fragmentos relevantes del libro |
-| Analista literario | **Analyst** | Interpreta y analiza la información |
-| Poeta / Artista | **Creative** | Genera poemas y canciones estilo Arjona |
-| Director de comunicaciones | **Synthesizer** | Redacta la respuesta final al usuario |
+### ¿Qué es RAG? (Retrieval-Augmented Generation)
 
-**LangGraph** es la herramienta que conecta estos agentes como un grafo de flujo: define
-quién trabaja, en qué orden, y qué información comparte entre ellos. Es el "organigrama
-de la empresa" hecho código.
+Un LLM sabe mucho sobre el mundo en general, pero **no conoce tu libro** (ni tu base de datos,
+ni tus documentos internos). Sin RAG, si le preguntas "¿qué dice la página 47 de Las Mil y Una
+Noches?", el modelo inventará una respuesta plausible — no la real.
+
+**RAG resuelve esto en 2 pasos:**
+
+```
+1. RETRIEVE (recuperar): busca en tu documento los fragmentos más relevantes para la pregunta
+2. GENERATE (generar):  le das esos fragmentos al LLM como contexto → responde con datos reales
+```
+
+Es la diferencia entre un estudiante que adivina la respuesta y uno que primero busca en el libro.
+
+---
+
+### ¿Qué son los embeddings vectoriales?
+
+Un embedding es la forma en que convertimos texto en números para que la computadora pueda
+comparar significados — no solo palabras iguales, sino ideas similares.
+
+```
+"Scheherazade cuenta historias" → [0.23, -0.81, 0.44, 0.17, ...]  (768 números)
+"La narradora relata cuentos"   → [0.21, -0.79, 0.46, 0.19, ...]  (muy parecidos!)
+"El gato toma café"             → [-0.54, 0.32, -0.11, 0.88, ...]  (muy diferentes)
+```
+
+El modelo `text-embedding-004` de Vertex AI convierte cada fragmento del libro en 768 números.
+Cuando llega una pregunta, también la convierte a 768 números y busca los fragmentos **más
+cercanos** en ese espacio matemático. Eso es búsqueda semántica.
+
+---
+
+### ¿Qué es ChromaDB?
+
+**ChromaDB es una base de datos vectorial** — almacena embeddings y permite búsquedas semánticas
+ultrarrápidas. Es como una base de datos normal (SQL), pero en vez de buscar por texto exacto,
+busca por *similitud de significado*.
+
+```
+Base de datos SQL:       SELECT * WHERE texto = 'Scheherazade'   → solo coincidencias exactas
+ChromaDB (vectorial):    busca('¿quién cuenta historias?')        → encuentra fragmentos sobre
+                                                                     Scheherazade aunque no
+                                                                     la mencionen por nombre
+```
+
+En este módulo:
+- El módulo 03 construye el ChromaDB: lee el PDF → divide en 302 fragmentos → genera embeddings
+  con Vertex AI → guarda todo en `data/chroma_db/`
+- El módulo 04 lo usa: abre ese ChromaDB → el Retriever Agent hace búsquedas semánticas sobre él
+
+---
+
+### ¿Qué es LangGraph y un StateGraph?
+
+**LangGraph** es una librería de Python para construir aplicaciones de IA como grafos de flujo.
+Un **StateGraph** es un grafo donde:
+
+- Los **nodos** son funciones (en nuestro caso, agentes de IA)
+- Los **edges** son conexiones entre nodos (flechas del diagrama)
+- El **estado** es un diccionario compartido que todos los nodos pueden leer y escribir
+
+```python
+# Cada nodo recibe el estado y devuelve qué campos actualiza
+def analyst_node(state: MilYUnaState) -> dict:
+    analysis = llm.invoke(state["query"] + state["retrieved_context"])
+    return {"analysis": analysis}   # actualiza solo este campo
+```
+
+A diferencia de una función normal que corre de arriba a abajo, un StateGraph puede:
+- **Bifurcar**: ir al Analyst O al Creative según el tipo de pregunta
+- **Iterar**: el Supervisor puede llamar a varios agentes en secuencia
+- **Terminar**: cuando el Synthesizer termina, el grafo llega a `END`
+
+---
+
+### ¿Qué es Vertex AI?
+
+**Vertex AI** es la plataforma de IA de Google Cloud. En este módulo usamos dos servicios:
+
+| Servicio | Para qué lo usamos | Costo aproximado |
+|----------|-------------------|-----------------|
+| **Gemini Flash Lite** (LLM) | Generar texto — análisis, poemas, síntesis | ~$0.001 / 1000 tokens |
+| **text-embedding-004** | Convertir fragmentos del libro a vectores | ~$0.00002 / 1000 tokens |
+
+Con los $300 de créditos gratuitos de GCP puedes correr el demo **miles de veces** sin pagar nada.
+
+---
+
+## ¿Qué es un Sistema Multi-Agente?
+
+Imagina que contratas a un equipo especializado para responder preguntas sobre un libro:
+
+| Rol | Agente | Responsabilidad única |
+|-----|--------|----------------------|
+| 🎯 Director de orquesta | **Supervisor** | Clasifica la pregunta y decide quién trabaja |
+| 📚 Bibliotecario | **Retriever** | Busca los fragmentos relevantes en ChromaDB |
+| 🔍 Analista literario | **Analyst** | Interpreta y analiza con profundidad académica |
+| 🎨 Poeta / Compositor | **Creative** | Genera poemas y canciones estilo Arjona |
+| ✍️ Editor final | **Synthesizer** | Integra todo en una respuesta cohesiva |
+
+¿Por qué no usar un solo LLM para todo? Porque la especialización produce mejor calidad:
+el Analyst tiene un prompt académico, el Creative tiene un prompt poético, el Supervisor
+tiene un prompt de clasificación. Cada agente hace UNA cosa bien.
 
 ---
 
 ## Arquitectura del sistema
 
+El siguiente diagrama muestra todos los componentes y cómo se conectan en GCP:
+
 ```mermaid
 flowchart TD
-    U([🧑 Usuario]) -->|pregunta| S
+    U([🧑 Usuario]) -->|"pregunta en lenguaje natural"| S
 
     subgraph GCP["☁️ Google Cloud Platform · Vertex AI"]
         subgraph MA["🤖 Sistema Multi-Agente — LangGraph StateGraph"]
@@ -88,7 +185,7 @@ flowchart TD
             CR["🎨 Creative\nPoemas y canciones Arjona"]
             SY["✍️ Synthesizer\nRespuesta final integrada"]
         end
-        DB[(ChromaDB\nVector Store)]
+        DB[(ChromaDB\nVector Store\n302 vectores)]
         EMB["text-embedding-004\nVertex AI Embeddings"]
         LLM["gemini-2.5-flash-lite\nVertex AI Gemini"]
     end
@@ -96,40 +193,59 @@ flowchart TD
     U --> S
 
     S -->|"① siempre primero"| R
-    R <-->|"query semántica"| EMB
-    EMB <-->|"302 vectores"| DB
-    R -->|"contexto + páginas"| S
+    R -->|"query semántica"| EMB
+    EMB -->|"vector de búsqueda"| DB
+    DB -->|"fragmentos similares"| R
+    R -->|"contexto + nº página"| S
 
-    S -->|"② analytical"| AN
-    S -->|"② creative"| CR
-    S -->|"② hybrid\nambos"| AN
-    S -->|"② hybrid\nambos"| CR
-
-    AN -->|resultado| S
-    CR -->|resultado| S
+    S -->|"② si analytical"| AN
+    S -->|"② si creative"| CR
+    AN -->|"análisis listo"| S
+    CR -->|"creación lista"| S
 
     S -->|"③ todo listo"| SY
-    SY -->|respuesta| Z([💬 Respuesta Final])
+    SY -->|"respuesta"| Z([💬 Respuesta Final])
 
-    S & R & AN & CR & SY -.->|API calls| LLM
+    S & R & AN & CR & SY -.->|"llamadas LLM"| LLM
 ```
 
-> **Los 3 flujos posibles según la query:**
-> - `analytical` → Supervisor → Retriever → **Analyst** → Synthesizer
-> - `creative`   → Supervisor → Retriever → **Creative** → Synthesizer
-> - `hybrid`     → Supervisor → Retriever → **Analyst + Creative** → Synthesizer
+### Los 3 flujos posibles
 
-### ¿Cómo fluye una pregunta por el sistema?
+| Tipo | Ejemplo de pregunta | Agentes activados | Tiempo aprox. |
+|------|--------------------|--------------------|---------------|
+| `analytical` | "¿Quién es Scheherazade?" | Supervisor → Retriever → **Analyst** → Synthesizer | ~15s |
+| `creative`   | "Escribe un haiku sobre Aladino" | Supervisor → Retriever → **Creative** → Synthesizer | ~6s |
+| `hybrid`     | "Analiza a Shahryar y escribe un poema" | Supervisor → Retriever → **Analyst + Creative** → Synthesizer | ~25s |
 
-| Tipo de query | Ejemplo | Agentes que se activan |
-|---|---|---|
-| `analytical` | "¿Quién es Scheherazade?" | Supervisor → Retriever → Analyst → Synthesizer |
-| `creative` | "Escribe un haiku sobre Aladino" | Supervisor → Retriever → Creative → Synthesizer |
-| `hybrid` | "Analiza a Shahryar y escribe un poema" | Supervisor → Retriever → Analyst → Creative → Synthesizer |
+### ¿Qué pasa exactamente cuando haces una pregunta?
 
-El **Supervisor** es el único nodo que tiene edges condicionales. Todos los demás agentes
-reportan de vuelta a él después de su trabajo. Esto permite routing dinámico: el grafo
-decide en tiempo de ejecución qué camino tomar según el contenido de la query.
+Paso a paso, esto es lo que ocurre cuando ejecutas `run_demo.py`:
+
+```
+1. [Supervisor]   Tu pregunta llega. El LLM la clasifica: ¿analytical, creative o hybrid?
+
+2. [Retriever]    Tu pregunta se convierte en un vector (768 números) con text-embedding-004.
+                  ChromaDB busca los 5 fragmentos del libro con vectores más similares.
+                  Resultado: 5 fragmentos con número de página y texto.
+
+3. [Analyst]      (solo si analytical o hybrid)
+                  Recibe la pregunta + los 5 fragmentos. El LLM genera un análisis
+                  literario profundo basado en el texto real del libro.
+
+4. [Creative]     (solo si creative o hybrid)
+                  Recibe la pregunta + los fragmentos. El LLM genera contenido artístico
+                  (poema, haiku, canción) inspirado en el texto.
+
+5. [Supervisor]   Revisa que todo el trabajo necesario esté hecho.
+
+6. [Synthesizer]  Recibe todo lo anterior y genera la respuesta final — coherente,
+                  bien estructurada y adaptada al tipo de pregunta.
+
+Total: 3-5 llamadas al LLM, 1 búsqueda en ChromaDB, 1 llamada de embeddings.
+```
+
+El **Supervisor** es el único nodo con edges condicionales — todos los demás agentes
+reportan de vuelta a él. Esto permite routing dinámico sin hardcodear el flujo.
 
 ---
 
@@ -686,11 +802,20 @@ En `config.yaml`:
 ```yaml
 model:
   name: gemini-2.5-flash        # Más capacidad que flash-lite
-  # name: gemini-2.5-pro        # El más poderoso (thinking_budget >= 1024)
-  thinking_budget: 0            # Solo flash-lite y flash soportan 0
+  # name: gemini-2.5-pro        # El más potente (mayor costo y latencia)
   temperature: 0.7              # Más creatividad en las respuestas
   max_output_tokens: 5000       # Respuestas más largas
 ```
+
+> **Nota:** `thinking_budget` no aplica en este módulo porque usamos `ChatVertexAI`
+> de LangChain, que no expone ese parámetro. Solo es relevante si usas el SDK nativo
+> `google-genai` (como en `modulo_03_gcp`).
+
+| Modelo | Velocidad | Calidad | Costo relativo |
+|--------|-----------|---------|----------------|
+| `gemini-2.5-flash-lite` | ★★★ Rápido | ★★ Bueno | $ Bajo |
+| `gemini-2.5-flash` | ★★ Normal | ★★★ Mejor | $$ Medio |
+| `gemini-2.5-pro` | ★ Lento | ★★★★ Excelente | $$$ Alto |
 
 ### Agregar memoria entre conversaciones
 
@@ -717,7 +842,7 @@ app.invoke(state, config={"configurable": {"thread_id": "usuario-123"}})
 | `ModuleNotFoundError: shared` | `uv sync` no ejecutado | Ejecuta `uv sync` dentro de `modulo_04_langgraph_gcp/` |
 | `ChromaDB not found` | módulo 03 no ejecutado | Ejecuta `uv run 02_rag_pipeline.py` en `modulo_03_gcp/` |
 | `404 model not found` | Nombre de modelo incorrecto | Usa `gemini-2.5-flash-lite`, `gemini-2.5-flash`, o `gemini-2.5-pro` |
-| `400 thinking_budget` | gemini-2.5-pro no acepta budget=0 | Cambia a `thinking_budget: 1024` en `config.yaml` |
+| `400 thinking_budget` | Error en modulo_03 (usa google-genai SDK) | En `modulo_03_gcp/config.yaml`: `thinking_budget: 1024` para pro |
 | Error en Windows con rutas | Espacios en el path | Usa comillas: `cd "C:\ruta con espacios\modulo_04"` |
 | `Vertex AI API not enabled` | API no habilitada en el proyecto | Ve a la consola GCP → busca Vertex AI → habilita la API |
 | Respuestas muy cortas | `max_output_tokens` muy bajo | Sube a `3000` o `5000` en `config.yaml` |
