@@ -1,0 +1,39 @@
+# ═══════════════════════════════════════════════════════════════════
+#  modulo_03_openai — Configuración central del módulo
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Modelo LLM principal ──────────────────────────────────────────
+# gpt-4o-mini  — rápido, económico, excelente para demos
+# Alternativas:
+#   gpt-4o       → mayor calidad, más costoso
+#   gpt-3.5-turbo → muy económico, menor calidad
+model:
+  name: gpt-4o-mini
+  temperature: 0.3
+  max_output_tokens: 2000
+
+# ── Modelo de embeddings ──────────────────────────────────────────
+embedding:
+  model: text-embedding-3-small   # 1536 dimensiones, económico y preciso
+  dimension: 1536
+
+# ── Configuración RAG ─────────────────────────────────────────────
+rag:
+  # ChromaDB — persistencia local
+  chroma_path: data/chroma_db
+  collection: mily_una_noches
+
+  # Chunking
+  chunk_size: 1000
+  chunk_overlap: 200
+
+  # Retrieval
+  top_k: 5
+
+  # Fuente de documentos (relativo a modulo_03_openai/)
+  # Reutilizamos el PDF del módulo GCP para no duplicar el archivo
+  database_path: ../modulo_03_gcp/src/database
+
+  # Demo mode: limita las páginas indexadas para pruebas rápidas.
+  # 0 = sin límite (índice completo)
+  max_pages: 150
